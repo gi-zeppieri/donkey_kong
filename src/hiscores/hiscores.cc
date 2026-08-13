@@ -1,11 +1,11 @@
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_primitives.h>
+#include "raylib.h"
 #include <cassert>
 #include <cstring>
 #include <exception>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <fstream>
 #include "hiscores.hh"
 #include "../core/log.hh"
 #include "../core/input.hh"
@@ -28,79 +28,57 @@ namespace hiscores {
     const auto is_name_char = [](char c){
       return ('A' <= c && c <= 'Z') || (c == '.') || (c == '-');
     };
-    ALLEGRO_CONFIG* score_file = al_load_config_file(hiscore_filepath);
-    if(!score_file){
+    
+    std::ifstream score_file(hiscore_filepath);
+    if(!score_file.is_open()){
       log(log_lvl::warning, std::string{"failed to load hiscores file; generating a new blank file at '"} + hiscore_filepath + "'");
       for(auto i = 0; i < hiscore_table_size; ++i){
         set_dummy_hiscore(i);
       }
-      score_file = al_create_config();
-      for(auto i = 0; i < hiscore_table_size; ++i){
-        auto istr = std::to_string(i);
-        al_set_config_value(score_file, nullptr, (std::string{"NAME"} + istr).c_str(), "---");
-        al_set_config_value(score_file, nullptr, (std::string{"SCORE"} + istr).c_str(), "0");
-      }
-      al_save_config_file(hiscore_filepath, score_file);
-      al_destroy_config(score_file);
+      save_hiscores();
     }
     else {
       for(auto i = 0; i < hiscore_table_size; ++i){
-        auto istr = std::to_string(i);
-        auto name_key = std::string{"NAME"} + istr;
-        auto score_key = std::string{"SCORE"} + istr;
-        auto name = al_get_config_value(score_file, nullptr, name_key.c_str());
-        if(!name){
-          log(log_lvl::warning, "failed to load hiscore " + name_key);
+        std::string name;
+        int score_value;
+        if(!(score_file >> name >> score_value)){
+          log(log_lvl::warning, "failed to load hiscore entry " + std::to_string(i));
           set_dummy_hiscore(i);
           continue;
         }
-        auto name_len = std::strlen(name);
-        if(name_len != 3){
-          log(log_lvl::warning, "loaded hiscore " + name_key + " not a valid name; must have 3 characters.");
+        if(name.length() != 3){
+          log(log_lvl::warning, "loaded hiscore name not valid; must have 3 characters.");
           set_dummy_hiscore(i);
           continue;
         }
-        if(!std::all_of(name, name + name_len, is_name_char)){
-          log(log_lvl::warning, "loaded hiscore " + name_key + " not a valid name; must only have characters [A-B] or . or _");
+        if(!std::all_of(name.begin(), name.end(), is_name_char)){
+          log(log_lvl::warning, "loaded hiscore name not valid; must only have characters [A-Z] or . or -");
           set_dummy_hiscore(i);
           continue;
         }
-        auto score = al_get_config_value(score_file, nullptr, score_key.c_str());
-        if(!score){
-          log(log_lvl::warning, "failed to load hiscore " + score_key);
-          set_dummy_hiscore(i);
-          continue;
-        }
-        try{
-          table[i].value = std::stoi(score);
-          table[i].name = name;
-        }
-        catch(const std::exception& e){
-          log(log_lvl::warning, "failed to parse score value for hiscore " + score_key + "; must be a valid integer.");
-          set_dummy_hiscore(i);
-          continue;
-        }
+        table[i].name = name;
+        table[i].value = score_value;
       }
       std::sort(table.begin(), table.end(), [](const hiscore& hs_lhs, const hiscore& hs_rhs){
         return hs_lhs.value < hs_rhs.value;
       });
-      al_destroy_config(score_file);
+      score_file.close();
     }
     return table;
   }
 
   void save_hiscores()
   {
-    ALLEGRO_CONFIG* score_file = al_create_config();
-    for(auto i = 0; i < hiscore_table_size; ++i){
-      auto istr = std::to_string(i);
-      auto name_key = std::string{"NAME"} + istr;
-      auto score_key = std::string{"SCORE"} + istr;
-      al_set_config_value(score_file, nullptr, name_key.c_str(), table[i].name.c_str());
-      al_set_config_value(score_file, nullptr, score_key.c_str(), std::to_string(table[i].value).c_str());
+    std::ofstream score_file(hiscore_filepath);
+    if(score_file.is_open()){
+      for(auto i = 0; i < hiscore_table_size; ++i){
+        score_file << table[i].name << " " << table[i].value << "\n";
+      }
+      score_file.close();
     }
-    al_save_config_file(hiscore_filepath, score_file);
-    al_destroy_config(score_file);
+    else{
+      log(log_lvl::warning, std::string{"failed to save hiscores file at '"} + hiscore_filepath + "'");
+    }
   }
 
   const hiscore_table& get_hiscore_table()
@@ -287,23 +265,23 @@ namespace hiscores::reg {
 
     const auto& focused_key = key_pad[focused_key_index];
     if(focused_key.key == 'r' || focused_key.key == 'e'){
-      al_draw_rectangle(
-        focused_key.position_px.x - focus_box_padding,
-        focused_key.position_px.y - focus_box_padding - 2,
-        (focused_key.position_px.x + rub_end_width_px) + focus_box_padding,
-        (focused_key.position_px.y + rub_end_height_px) + focus_box_padding + 1,
-        al_map_rgb(255, 255, 255),
-        1
+      DrawRectangleLinesEx(
+        {static_cast<float>(focused_key.position_px.x - focus_box_padding),
+         static_cast<float>(focused_key.position_px.y - focus_box_padding - 2),
+         rub_end_width_px + (focus_box_padding * 2),
+         rub_end_height_px + (focus_box_padding * 2) + 3},
+        1.0f,
+        WHITE
       );
     }
     else{
-      al_draw_rectangle(
-        focused_key.position_px.x - focus_box_padding,
-        focused_key.position_px.y - focus_box_padding - 1,
-        (focused_key.position_px.x + key_size) + focus_box_padding,
-        (focused_key.position_px.y + key_size) + focus_box_padding - 1,
-        al_map_rgb(255, 255, 255),
-        1
+      DrawRectangleLinesEx(
+        {static_cast<float>(focused_key.position_px.x - focus_box_padding),
+         static_cast<float>(focused_key.position_px.y - focus_box_padding - 1),
+         static_cast<float>(key_size + (focus_box_padding * 2)),
+         static_cast<float>(key_size + (focus_box_padding * 2))},
+        1.0f,
+        WHITE
       );
     }
   }

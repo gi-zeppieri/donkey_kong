@@ -371,7 +371,7 @@ bool load_sprite_sheets()
   for(auto ssid = 0; ssid < SSID_COUNT; ++ssid){
     log_loading(ss_names[ssid]);
     sprite_sheets[ssid] = LoadTexture((ss_path + ss_names[ssid]).c_str());
-    if(!IsTextureReady(sprite_sheets[ssid])){
+    if(sprite_sheets[ssid].id <= 0){
       log_load_fail(ss_names[ssid]);
       return false;
     }

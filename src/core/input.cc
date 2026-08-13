@@ -33,6 +33,7 @@ namespace input
       }
     }
     assert(0);
+    return false;
   }
 
   void record_key_pressed(keycode code)

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <array>
+#include "raylib.h"
 #include "input.hh"
 
 namespace input
@@ -13,7 +14,8 @@ namespace input
   };
 
   namespace {
-    std::array<key_state, ALLEGRO_KEY_MAX> _key_states;
+    constexpr int MAX_KEYBOARD_KEYS = 512; // Raylib supports up to 512 keys
+    std::array<key_state, MAX_KEYBOARD_KEYS> _key_states;
     const control_scheme* _control_scheme = &arrows_control_scheme;
   }
 
@@ -35,7 +37,7 @@ namespace input
 
   void record_key_pressed(keycode code)
   {
-    assert(0 <= code && code < ALLEGRO_KEY_MAX);
+    assert(0 <= code && code < MAX_KEYBOARD_KEYS);
     auto& state = _key_states[code];
     state.is_pressed = true;
     state.is_down = true;
@@ -44,7 +46,7 @@ namespace input
 
   void record_key_released(keycode code)
   {
-    assert(0 <= code && code < ALLEGRO_KEY_MAX);
+    assert(0 <= code && code < MAX_KEYBOARD_KEYS);
     auto& state = _key_states[code];
     if(!state.is_seen){
       state.is_released = true;

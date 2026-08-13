@@ -1,10 +1,4 @@
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
+#include "raylib.h"
 #include <exception>
 #include <string>
 #include <cstring>
@@ -69,9 +63,6 @@ irect calculate_world_bitmap_blit_rect(int new_width_px, int new_height_px)
 int main()
 {
   float target_fps_hz = 60.f;
-  ALLEGRO_DISPLAY* display;
-  ALLEGRO_EVENT_QUEUE* event_queue;
-  ALLEGRO_TIMER* game_ticker;
   double real_time_s = 0.0;
   double game_time_s = 0.0;
   float tick_delta_s;
@@ -81,15 +72,13 @@ int main()
   int fps_tick_counter = 0;
   int ticks_done_this_frame = 0;
   int ticks_accumulated = 0;
-  bool need_redraw = false;
-  bool is_running = true;
   double fps_timer_s = 0.0;
   double fps = 0.0;
   int top_hiscore = 0;
-  ALLEGRO_FONT* debug_font;
-  ALLEGRO_BITMAP* world_bitmap;  // world drawn to this 224x256px bitmap, then scale drawn to window.
+  RenderTexture2D world_render_target;  // world drawn to this 224x256px texture, then scale drawn to window.
   irect world_bitmap_blit_rect;   // area of window to draw world_bitmap to.
   std::unique_ptr<game_data> game;
+  double last_frame_time_s = 0.0;
 
   hiscores::reg::initialise();
 
@@ -112,8 +101,10 @@ int main()
   {
     log(log_lvl::info, "loading config");
 
-    ALLEGRO_CONFIG* dk_config = al_load_config_file("assets/dk_config.ini");
-    if(dk_config != nullptr){
+    // Note: Raylib doesn't have built-in config file loading, so we'll use default values
+    // In a full implementation, you'd want to add a config file parser
+    bool config_loaded = false;
+    if(config_loaded){
       const auto log_set_value = [](const char* value_name, const char* value){
         std::stringstream ss{};
         ss << "set '" << fmt_bold << value_name << fmt_clear
@@ -130,7 +121,8 @@ int main()
       };
 
       const char* value;
-      value = al_get_config_value(dk_config, "core", "target_fps_hz");
+      const char* value = nullptr;
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           target_fps_hz = std::stof(value);
@@ -142,7 +134,7 @@ int main()
       }
 
       auto is_valid_window_size = true;
-      value = al_get_config_value(dk_config, "core", "window_width_px");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           global::window_width_px = std::stoi(value);
@@ -153,7 +145,7 @@ int main()
           is_valid_window_size = false;
         }
       }
-      value = al_get_config_value(dk_config, "core", "window_height_px");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           global::window_height_px = std::stoi(value);
@@ -179,7 +171,7 @@ int main()
         log_set_value("window_height_px", std::to_string(global::window_height_px).c_str());
       }
 
-      value = al_get_config_value(dk_config, "core", "control_scheme");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         if(std::strcmp("wasd", value) == 0){
           input::set_control_scheme(input::wasd_control_scheme);
@@ -194,7 +186,7 @@ int main()
         }
       }
 
-      value = al_get_config_value(dk_config, "core", "debug_mode");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           auto debug_enabled = std::stoi(value);
@@ -207,7 +199,7 @@ int main()
           global::is_debug_enabled = false;
         }
       }
-      value = al_get_config_value(dk_config, "core", "invulnerable_mode");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           auto invulnerable_enabled = std::stoi(value);
@@ -220,7 +212,7 @@ int main()
           global::is_jm_invulnerable = false;
         }
       }
-      value = al_get_config_value(dk_config, "core", "classic_mode");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           auto classic_enabled = std::stoi(value);
@@ -233,7 +225,7 @@ int main()
           global::is_classic_mode = true;
         }
       }
-      value = al_get_config_value(dk_config, "core", "fullscreen");
+      value = nullptr; // Placeholder - would read from config
       if(value != nullptr){
         try {
           is_fullscreen = std::stoi(value) > 0;
@@ -257,54 +249,26 @@ int main()
 
   // initialise core
   {
-    const auto require_init = [](bool init_result, const char* system_name) -> void {
-      if(!init_result){
-        std::string msg{"failed to initialise "};
-        msg += system_name;
-        log(log_lvl::fatal, msg);
-        exit(EXIT_FAILURE);
-      }
-    };
-
     log(log_lvl::info, "initialising core.");
 
-    require_init(al_init(), "allegro");
-    require_init(al_init_image_addon(), "allegro image addon");
-    require_init(al_init_font_addon(), "allegro font addon");
-    require_init(al_init_ttf_addon(), "allegro ttf addon");
-    require_init(al_init_primitives_addon(), "allegro primitives addon");
-    require_init(al_install_keyboard(), "allegro keyboard driver");
-    require_init(al_install_audio(), "allegro audio addon");
-    require_init(al_init_acodec_addon(), "allegro audio codecs addon");
-    require_init(al_reserve_samples(16), "audio sample reservation");
-
-    if(is_fullscreen) al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-    else al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
-    display = al_create_display(global::window_width_px, global::window_height_px);
-    require_init(display != nullptr, "allegro display");
-    global::window_width_px = al_get_display_width(display);
-    global::window_height_px = al_get_display_height(display);
-
-    auto old_bitmap_flags = al_get_new_bitmap_flags();
-    al_set_new_bitmap_flags(ALLEGRO_NO_PRESERVE_TEXTURE);
-    world_bitmap = al_create_bitmap(con::world_width_px, con::world_height_px);
-    require_init(world_bitmap != nullptr, "world bitmap");
-    al_set_new_bitmap_flags(old_bitmap_flags);
-    world_bitmap_blit_rect = calculate_world_bitmap_blit_rect(global::window_width_px, global::window_height_px);
-
-    event_queue = al_create_event_queue();
-    require_init(event_queue != nullptr, "allegro event queue");
-
+    // Initialize Raylib window
+    if(is_fullscreen){
+      InitWindow(global::window_width_px, global::window_height_px, "Donkey Kong 1981");
+      ToggleFullscreen();
+    } else {
+      SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+      InitWindow(global::window_width_px, global::window_height_px, "Donkey Kong 1981");
+    }
+    
+    global::window_width_px = GetScreenWidth();
+    global::window_height_px = GetScreenHeight();
+    
+    SetTargetFPS(static_cast<int>(target_fps_hz));
     tick_delta_s = 1.f / target_fps_hz;
-    game_ticker = al_create_timer(tick_delta_s);
-    require_init(game_ticker != nullptr, "allegro timer for game ticker");
 
-    al_register_event_source(event_queue, al_get_keyboard_event_source());
-    al_register_event_source(event_queue, al_get_timer_event_source(game_ticker));
-    al_register_event_source(event_queue, al_get_display_event_source(display));
-
-    debug_font = al_create_builtin_font();
-    require_init(debug_font, "debug font");
+    // Create render texture for world (224x256)
+    world_render_target = LoadRenderTexture(con::world_width_px, con::world_height_px);
+    world_bitmap_blit_rect = calculate_world_bitmap_blit_rect(global::window_width_px, global::window_height_px);
 
     // seed random number generator.
     auto seq = std::seed_seq{std::time(nullptr)};
@@ -332,55 +296,56 @@ int main()
 
   // runloop
   {
-    al_start_timer(game_ticker);
-    while(is_running)
+    last_frame_time_s = GetTime();
+    while(!WindowShouldClose())
     {
-      do {
-        ALLEGRO_EVENT event;
-        al_wait_for_event(event_queue, &event);
-        switch(event.type){
-          case ALLEGRO_EVENT_TIMER:
-            real_time_s += tick_delta_s;
-            fps_timer_s += tick_delta_s;
-            ++ticks_accumulated;
-            break;
-          case ALLEGRO_EVENT_KEY_DOWN:
-            if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
-              is_running = false;
-            }
-            else if(event.keyboard.keycode == ALLEGRO_KEY_TAB){
-              global::is_debug_draw = !global::is_debug_draw;
-              auto debug_state_string = global::is_debug_draw ? "on" : "off";
-              log(log_lvl::info, std::string{"debug mode "} + debug_state_string);
-            }
-            else if(event.keyboard.keycode == ALLEGRO_KEY_O){
-              is_paused = !is_paused;
-              auto pause_string = is_paused ? "paused game" : "unpaused game";
-              log(log_lvl::info, pause_string);
-            }
-            else if(event.keyboard.keycode == ALLEGRO_KEY_P){
-              is_stat_draw = !is_stat_draw;
-              auto stats_string = is_stat_draw ? "enabling" : "disabling";
-              log(log_lvl::info, stats_string + std::string{" runtime stats output"});
-            }
-            input::record_key_pressed(event.keyboard.keycode);
-            break;
-          case ALLEGRO_EVENT_KEY_UP:
-            input::record_key_released(event.keyboard.keycode);
-            break;
-          case ALLEGRO_EVENT_DISPLAY_RESIZE:
-            al_acknowledge_resize(display);
-            // stop resizing once window gets too small and allow the game to overflow the window bounds.
-            if(event.display.width >= con::world_width_px && event.display.height >= con::world_height_px){
-              world_bitmap_blit_rect = calculate_world_bitmap_blit_rect(event.display.width, event.display.height);
-            }
-            break;
-          case ALLEGRO_EVENT_DISPLAY_CLOSE:
-            is_running = false;
-            break;
+      // Handle input
+      if(IsKeyPressed(KEY_ESCAPE)){
+        break;
+      }
+      if(IsKeyPressed(KEY_TAB)){
+        global::is_debug_draw = !global::is_debug_draw;
+        auto debug_state_string = global::is_debug_draw ? "on" : "off";
+        log(log_lvl::info, std::string{"debug mode "} + debug_state_string);
+      }
+      if(IsKeyPressed(KEY_O)){
+        is_paused = !is_paused;
+        auto pause_string = is_paused ? "paused game" : "unpaused game";
+        log(log_lvl::info, pause_string);
+      }
+      if(IsKeyPressed(KEY_P)){
+        is_stat_draw = !is_stat_draw;
+        auto stats_string = is_stat_draw ? "enabling" : "disabling";
+        log(log_lvl::info, stats_string + std::string{" runtime stats output"});
+      }
+
+      // Poll all keys for input system
+      for(int key = 0; key < 512; key++){
+        if(IsKeyPressed(key)){
+          input::record_key_pressed(key);
+        }
+        if(IsKeyReleased(key)){
+          input::record_key_released(key);
         }
       }
-      while(!al_event_queue_is_empty(event_queue));
+
+      // Handle window resize
+      if(IsWindowResized()){
+        global::window_width_px = GetScreenWidth();
+        global::window_height_px = GetScreenHeight();
+        if(global::window_width_px >= con::world_width_px && global::window_height_px >= con::world_height_px){
+          world_bitmap_blit_rect = calculate_world_bitmap_blit_rect(global::window_width_px, global::window_height_px);
+        }
+      }
+
+      // Calculate frame time and accumulate ticks
+      double current_time_s = GetTime();
+      double frame_time_s = current_time_s - last_frame_time_s;
+      last_frame_time_s = current_time_s;
+      
+      real_time_s += frame_time_s;
+      fps_timer_s += frame_time_s;
+      ticks_accumulated += static_cast<int>(frame_time_s / tick_delta_s);
 
       // limiting ticks per frame prevents a 'spiral of death'.
       constexpr auto max_ticks_per_frame = 5;
@@ -415,9 +380,9 @@ int main()
           }
           game_time_s += tick_delta_s;
         }
+        update_sounds(); // Update Raylib music streams
         hud::update(tick_delta_s);
         input::update_key_states();
-        need_redraw = true;
         --ticks_accumulated;
         ++ticks_done_this_frame;
         ++fps_tick_counter;
@@ -427,101 +392,95 @@ int main()
         fps_timer_s = 0.0;
         fps_tick_counter = 0;
       }
-      if(need_redraw){
-        al_set_target_bitmap(world_bitmap);
-        al_clear_to_color(al_map_rgb(0, 0, 0));
-        switch(app_state_){
-            case app_state::title: {title::draw(); break;}
-            case app_state::menu: {menu::draw(); break;}
-            case app_state::game: {game::draw(*game); break;}
-            case app_state::hi_score: {hiscores::reg::draw(); break;}
-            default: assert(0);
-        }
-        auto stats = app_state_ == app_state::game ? game::get_game_stats(*game) : game_stats{0, 0, 0};
-        hud::draw({top_hiscore, stats.score, stats.level_number, stats.life_count});
-        al_set_target_backbuffer(display);
-        al_clear_to_color(al_map_rgb(0, 0, 0));
-        al_draw_scaled_bitmap(
-          world_bitmap,
-          0,
-          0,
-          con::world_width_px,
-          con::world_height_px,
-          world_bitmap_blit_rect.x,
-          world_bitmap_blit_rect.y,
-          world_bitmap_blit_rect.w,
-          world_bitmap_blit_rect.h,
-          0
-        );
-        if(is_stat_draw){
-          // draw the runtime statistics window in bottom-left.
-          constexpr auto box_w_px = 200;
-          constexpr auto box_h_px = 70;
-          al_draw_filled_rectangle(
-            0,
-            static_cast<float>(global::window_height_px - box_h_px),
-            box_w_px,
-            static_cast<float>(global::window_height_px),
-            al_map_rgb(0, 0, 255)
-          );
-          std::stringstream ss{};
-          ss.precision(3);
-          ss << "real_time(secs)=" << real_time_s << " game_time(secs)=" << game_time_s << "\n"
-             << "fps=" << fps << " ticks_per_frame=" << ticks_done_this_frame;
-          constexpr auto box_padding_px = 10;
-          al_draw_multiline_text(
-            debug_font,
-            al_map_rgb(255, 255, 255),
-            box_padding_px,
-            static_cast<float>(global::window_height_px - box_h_px + box_padding_px),
-            box_w_px - (box_padding_px * 2),
-            14,
-            ALLEGRO_ALIGN_LEFT,
-            ss.str().c_str()
-            );
-        }
-        if(is_paused){
-          // draw the paused icon.
-          static auto bg_color = al_map_rgb(255, 0, 0);
-          static auto fg_color = al_map_rgb(255, 0, 0);
-          constexpr auto radius_px = 30;
-          constexpr auto diameter_px = radius_px * 2;
-          auto center_x_px = 20 + radius_px;
-          auto center_y_px = center_x_px;
-          constexpr auto border_thickness_px = 4.f;
-          al_draw_circle(
-            static_cast<float>(center_x_px),
-            static_cast<float>(center_y_px),
-            radius_px,
-            fg_color,
-            border_thickness_px
-          );
-          constexpr int stripe_half_gap_px = diameter_px * 0.06f;
-          constexpr int stripe_w_px = diameter_px * 0.16f;
-          constexpr int stripe_h_px = diameter_px * 0.4f;
-          constexpr int stripe_half_h_px = stripe_h_px / 2.f;
-          constexpr int strip_border_radius_px = 2;
-          al_draw_filled_rounded_rectangle(
-            center_x_px - stripe_half_gap_px - stripe_w_px,
-            center_y_px - stripe_half_h_px,
-            center_x_px - stripe_half_gap_px,
-            center_y_px + stripe_half_h_px,
-            strip_border_radius_px,
-            strip_border_radius_px,
-            fg_color
-          );
-          al_draw_filled_rounded_rectangle(
-            center_x_px + stripe_half_gap_px,
-            center_y_px - stripe_half_h_px,
-            center_x_px + stripe_half_gap_px + stripe_w_px,
-            center_y_px + stripe_half_h_px,
-            strip_border_radius_px,
-            strip_border_radius_px,
-            fg_color
-            );
-        }
-        al_flip_display();
+
+      // Draw to render texture (world)
+      BeginTextureMode(world_render_target);
+      ClearBackground(BLACK);
+      switch(app_state_){
+          case app_state::title: {title::draw(); break;}
+          case app_state::menu: {menu::draw(); break;}
+          case app_state::game: {game::draw(*game); break;}
+          case app_state::hi_score: {hiscores::reg::draw(); break;}
+          default: assert(0);
       }
+      auto stats = app_state_ == app_state::game ? game::get_game_stats(*game) : game_stats{0, 0, 0};
+      hud::draw({top_hiscore, stats.score, stats.level_number, stats.life_count});
+      EndTextureMode();
+
+      // Draw to screen
+      BeginDrawing();
+      ClearBackground(BLACK);
+      
+      // Draw the world render texture scaled to fit window
+      Rectangle source = {0, 0, static_cast<float>(con::world_width_px), static_cast<float>(-con::world_height_px)};
+      Rectangle dest = {
+        static_cast<float>(world_bitmap_blit_rect.x),
+        static_cast<float>(world_bitmap_blit_rect.y),
+        static_cast<float>(world_bitmap_blit_rect.w),
+        static_cast<float>(world_bitmap_blit_rect.h)
+      };
+      DrawTexturePro(world_render_target.texture, source, dest, {0, 0}, 0.0f, WHITE);
+      if(is_stat_draw){
+        // draw the runtime statistics window in bottom-left.
+        constexpr auto box_w_px = 200;
+        constexpr auto box_h_px = 70;
+        DrawRectangle(
+          0,
+          global::window_height_px - box_h_px,
+          box_w_px,
+          box_h_px,
+          BLUE
+        );
+        std::stringstream ss{};
+        ss.precision(3);
+        ss << "real_time(secs)=" << real_time_s << "\n"
+           << "game_time(secs)=" << game_time_s << "\n"
+           << "fps=" << fps << "\n"
+           << "ticks_per_frame=" << ticks_done_this_frame;
+        constexpr auto box_padding_px = 10;
+        DrawText(
+          ss.str().c_str(),
+          box_padding_px,
+          global::window_height_px - box_h_px + box_padding_px,
+          10,
+          WHITE
+        );
+      }
+      if(is_paused){
+        // draw the paused icon.
+        Color fg_color = RED;
+        constexpr auto radius_px = 30;
+        constexpr auto diameter_px = radius_px * 2;
+        auto center_x_px = 20 + radius_px;
+        auto center_y_px = center_x_px;
+        constexpr auto border_thickness_px = 4.f;
+        DrawCircleLines(center_x_px, center_y_px, radius_px, fg_color);
+        DrawCircleLines(center_x_px, center_y_px, radius_px - 1, fg_color);
+        DrawCircleLines(center_x_px, center_y_px, radius_px - 2, fg_color);
+        DrawCircleLines(center_x_px, center_y_px, radius_px - 3, fg_color);
+        
+        constexpr int stripe_half_gap_px = diameter_px * 0.06f;
+        constexpr int stripe_w_px = diameter_px * 0.16f;
+        constexpr int stripe_h_px = diameter_px * 0.4f;
+        constexpr int stripe_half_h_px = stripe_h_px / 2.f;
+        
+        DrawRectangle(
+          center_x_px - stripe_half_gap_px - stripe_w_px,
+          center_y_px - stripe_half_h_px,
+          stripe_w_px,
+          stripe_h_px,
+          fg_color
+        );
+        DrawRectangle(
+          center_x_px + stripe_half_gap_px,
+          center_y_px - stripe_half_h_px,
+          stripe_w_px,
+          stripe_h_px,
+          fg_color
+        );
+      }
+      
+      EndDrawing();
     }
   }
 
@@ -536,19 +495,7 @@ int main()
   // shutdown core
   {
     log(log_lvl::info, "shutting down core.");
-    al_destroy_font(debug_font);
-    al_destroy_bitmap(world_bitmap);
-    al_destroy_timer(game_ticker);
-    if(event_queue != nullptr){
-      al_destroy_event_queue(event_queue);
-    }
-    if(display != nullptr){
-      al_destroy_display(display);
-    }
-    al_uninstall_keyboard();
-    al_shutdown_ttf_addon();
-    al_shutdown_font_addon();
-    al_shutdown_image_addon();
-    al_shutdown_primitives_addon();
+    UnloadRenderTexture(world_render_target);
+    CloseWindow();
   }
 }

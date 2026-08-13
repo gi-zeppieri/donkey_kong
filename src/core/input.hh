@@ -1,7 +1,6 @@
 #ifndef DONKEY_KONG_1981_INPUT_HH
 #define DONKEY_KONG_1981_INPUT_HH
 
-#include <allegro5/allegro.h>
 #include <array>
 
 namespace input
@@ -46,30 +45,31 @@ namespace input
 
   using control_scheme = std::array<keycode, ACTION_COUNT>;
 
+  // Raylib key codes
   constexpr control_scheme wasd_control_scheme {
-    ALLEGRO_KEY_N, // action_force_next_lvl
-    ALLEGRO_KEY_A, // action_move_left
-    ALLEGRO_KEY_D, // action_move_right
-    ALLEGRO_KEY_W, // action_climb_up
-    ALLEGRO_KEY_S, // action_climb_down
-    ALLEGRO_KEY_W , // action_jump
-    ALLEGRO_KEY_LEFT, // action_menu_prev
-    ALLEGRO_KEY_RIGHT, // action_menu_next
-    ALLEGRO_KEY_ENTER, // action_menu_enter
-    ALLEGRO_KEY_SPACE, // action_skip_cutscene
+    78, // KEY_N - action_force_next_lvl
+    65, // KEY_A - action_move_left
+    68, // KEY_D - action_move_right
+    87, // KEY_W - action_climb_up
+    83, // KEY_S - action_climb_down
+    87, // KEY_W - action_jump
+    263, // KEY_LEFT - action_menu_prev
+    262, // KEY_RIGHT - action_menu_next
+    257, // KEY_ENTER - action_menu_enter
+    32, // KEY_SPACE - action_skip_cutscene
   };
 
   constexpr control_scheme arrows_control_scheme {
-    ALLEGRO_KEY_N, // action_force_next_lvl
-    ALLEGRO_KEY_LEFT, // action_move_left
-    ALLEGRO_KEY_RIGHT, // action_move_right
-    ALLEGRO_KEY_UP, // action_climb_up
-    ALLEGRO_KEY_DOWN, // action_climb_down
-    ALLEGRO_KEY_SPACE , // action_jump
-    ALLEGRO_KEY_LEFT, // action_menu_prev
-    ALLEGRO_KEY_RIGHT, // action_menu_next
-    ALLEGRO_KEY_ENTER, // action_menu_enter
-    ALLEGRO_KEY_SPACE, // action_skip_cutscene
+    78, // KEY_N - action_force_next_lvl
+    263, // KEY_LEFT - action_move_left
+    262, // KEY_RIGHT - action_move_right
+    265, // KEY_UP - action_climb_up
+    264, // KEY_DOWN - action_climb_down
+    32, // KEY_SPACE - action_jump
+    263, // KEY_LEFT - action_menu_prev
+    262, // KEY_RIGHT - action_menu_next
+    257, // KEY_ENTER - action_menu_enter
+    32, // KEY_SPACE - action_skip_cutscene
   };
 
   bool is_action_triggered(action a);

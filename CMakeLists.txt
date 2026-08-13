@@ -22,7 +22,5 @@ set(SOURCE_FILES
         src/game/stages/classic_rivets.cc
         src/assets/cutscenes.cc src/assets/fonts.cc src/assets/fonts.hh src/hud/hud.hh src/hud/hud.cc src/assets/sounds.hh src/assets/sounds.cc src/hiscores/hiscores.cc src/hiscores/hiscores.hh src/menu/menu.cc src/menu/menu.hh src/title/title.cc src/title/title.hh)
 
-find_package(raylib 5.0 REQUIRED)
-
 add_executable(donkey_kong_1981 ${SOURCE_FILES})
-target_link_libraries(donkey_kong_1981 raylib)
+target_link_libraries(donkey_kong_1981 raylib GL m pthread dl rt X11)

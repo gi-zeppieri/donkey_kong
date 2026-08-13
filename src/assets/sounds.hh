@@ -1,7 +1,6 @@
 #ifndef DONKEY_KONG_1981_SOUNDS_HH
 #define DONKEY_KONG_1981_SOUNDS_HH
 
-#include <allegro5/allegro_audio.h>
 #include <optional>
 
 enum sound_id
@@ -34,7 +33,7 @@ bool load_sounds();
 /** Must call at end to free sound memory. */
 void unload_sounds();
 
-using snd_play_id = std::optional<ALLEGRO_SAMPLE_ID>;
+using snd_play_id = std::optional<int>;
 
 /** If sound successfully play returns a sample if which can be used to later
  *  stop the playback; returns no value if sound failed to play. */

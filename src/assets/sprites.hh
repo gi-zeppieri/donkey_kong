@@ -1,9 +1,11 @@
 #ifndef DONKEY_KONG_1981_SPRITES_HH
 #define DONKEY_KONG_1981_SPRITES_HH
 
-#include <allegro5/allegro.h>
 #include <array>
 #include "../core/math.hh"
+
+// Forward declare Raylib types to avoid including raylib.h in header
+struct Texture2D;
 
 enum sprite_sheet_id
 {
@@ -174,7 +176,7 @@ struct sprite
   vector2f offset;
 };
 
-using sprite_sheet = ALLEGRO_BITMAP*;
+using sprite_sheet = Texture2D*;
 
 /** Called during init to load all sprite sheets. */
 bool load_sprite_sheets();

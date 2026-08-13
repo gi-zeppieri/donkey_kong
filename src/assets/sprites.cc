@@ -2,13 +2,14 @@
 #include <cassert>
 #include <sstream>
 #include <cmath>
+#include "raylib.h"
 #include "sprites.hh"
 #include "../core/log.hh"
 
 namespace
 {
   /** internal store of all loaded sprite sheets. */
-  std::array<sprite_sheet, SSID_COUNT> sprite_sheets;
+  std::array<Texture2D, SSID_COUNT> sprite_sheets;
 
   /** hard-coded names of all the sprite sheet files. */
   constexpr std::array<const char*, SSID_COUNT> ss_names {
@@ -369,8 +370,8 @@ bool load_sprite_sheets()
 
   for(auto ssid = 0; ssid < SSID_COUNT; ++ssid){
     log_loading(ss_names[ssid]);
-    sprite_sheets[ssid] = al_load_bitmap((ss_path + ss_names[ssid]).c_str());
-    if(!sprite_sheets[ssid]){
+    sprite_sheets[ssid] = LoadTexture((ss_path + ss_names[ssid]).c_str());
+    if(!IsTextureReady(sprite_sheets[ssid])){
       log_load_fail(ss_names[ssid]);
       return false;
     }
@@ -382,8 +383,8 @@ bool load_sprite_sheets()
 void unload_sprite_sheets()
 {
   log(log_lvl::info, "unloading sprite sheets");
-  for(const auto& ss : sprite_sheets){
-    al_destroy_bitmap(ss);
+  for(auto& ss : sprite_sheets){
+    UnloadTexture(ss);
   }
 }
 
@@ -391,63 +392,76 @@ std::pair<const sprite&, sprite_sheet> get_sprite_data(sprite_id sid)
 {
   assert(0 <= sid && sid <= SID_COUNT);
   const auto& sprite = sprites[sid];
-  auto sprite_sheet = sprite_sheets[sprite.ssid];
+  auto sprite_sheet = &sprite_sheets[sprite.ssid];
   return {sprite, sprite_sheet};
 }
 
 void draw_sprite(sprite_id sid, vector2f position_px, bool flip_x, bool flip_y)
 {
   const auto& sprite_data = get_sprite_data(sid);
-  auto flags = 0;
-  if(flip_x){
-    flags |= ALLEGRO_FLIP_HORIZONTAL;
-  }
-  if(flip_y){
-    flags |= ALLEGRO_FLIP_VERTICAL;
-  }
-  al_draw_bitmap_region(
-    sprite_data.second,
-    sprite_data.first.clip.x,
-    sprite_data.first.clip.y,
-    sprite_data.first.clip.w,
-    sprite_data.first.clip.h,
-    position_px.x + sprite_data.first.offset.x,
-    position_px.y + sprite_data.first.offset.y,
-    flags
-  );
+  const auto& spr = sprite_data.first;
+  const Texture2D* texture = sprite_data.second;
+  
+  Rectangle source = {
+    static_cast<float>(spr.clip.x),
+    static_cast<float>(spr.clip.y),
+    static_cast<float>(spr.clip.w) * (flip_x ? -1.0f : 1.0f),
+    static_cast<float>(spr.clip.h) * (flip_y ? -1.0f : 1.0f)
+  };
+  
+  Rectangle dest = {
+    position_px.x + spr.offset.x,
+    position_px.y + spr.offset.y,
+    static_cast<float>(spr.clip.w),
+    static_cast<float>(spr.clip.h)
+  };
+  
+  Vector2 origin = {0.0f, 0.0f};
+  
+  DrawTexturePro(*texture, source, dest, origin, 0.0f, WHITE);
 }
 
 void draw_sprite(sprite_id sid, vector2i position_px, bool flip_x, bool flip_y)
 {
-  vector2f pos{};
-  pos.x = static_cast<float>(position_px.x);
-  pos.y = static_cast<float>(position_px.y);
+  vector2f pos{
+    static_cast<float>(position_px.x),
+    static_cast<float>(position_px.y)
+  };
   draw_sprite(sid, pos, flip_x, flip_y);
 }
 
 void draw_centered_sprite(sprite_id sid, vector2f position_px, bool flip_x, bool flip_y)
 {
   const auto& sprite_data = get_sprite_data(sid);
-  auto offset_x = sprite_data.first.offset.x;
-  auto offset_y = sprite_data.first.offset.y;
-  auto flags = 0;
+  const auto& spr = sprite_data.first;
+  const Texture2D* texture = sprite_data.second;
+  
+  auto offset_x = spr.offset.x;
+  auto offset_y = spr.offset.y;
+  
   if(flip_x){
-    flags |= ALLEGRO_FLIP_HORIZONTAL;
     offset_x *= -1.f;
   }
   if(flip_y){
-    flags |= ALLEGRO_FLIP_VERTICAL;
     offset_y *= -1.f;
   }
-  al_draw_bitmap_region(
-    sprite_data.second,
-    sprite_data.first.clip.x,
-    sprite_data.first.clip.y,
-    sprite_data.first.clip.w,
-    sprite_data.first.clip.h,
-   std::floor((position_px.x - sprite_data.first.clip.w * 0.5f) + offset_x),
-    std::floor((position_px.y - sprite_data.first.clip.h * 0.5f) + offset_y),
-    flags
-  );
+  
+  Rectangle source = {
+    static_cast<float>(spr.clip.x),
+    static_cast<float>(spr.clip.y),
+    static_cast<float>(spr.clip.w) * (flip_x ? -1.0f : 1.0f),
+    static_cast<float>(spr.clip.h) * (flip_y ? -1.0f : 1.0f)
+  };
+  
+  Rectangle dest = {
+    std::floor((position_px.x - spr.clip.w * 0.5f) + offset_x),
+    std::floor((position_px.y - spr.clip.h * 0.5f) + offset_y),
+    static_cast<float>(spr.clip.w),
+    static_cast<float>(spr.clip.h)
+  };
+  
+  Vector2 origin = {0.0f, 0.0f};
+  
+  DrawTexturePro(*texture, source, dest, origin, 0.0f, WHITE);
 }
 

@@ -1,4 +1,4 @@
-#include <allegro5/allegro_primitives.h>
+#include "raylib.h"
 #include <tuple>
 #include <sstream>
 #include <iomanip>
@@ -1634,277 +1634,238 @@ namespace {
   void draw_debug(game_data& gd)
   {
     for(const auto& girder : gd.girders){
-      al_draw_line(
-        girder.left_px,
-        girder.surface_px,
-        girder.right_px,
-        girder.surface_px,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawLineEx(
+        {static_cast<float>(girder.left_px), static_cast<float>(girder.surface_px)},
+        {static_cast<float>(girder.right_px), static_cast<float>(girder.surface_px)},
+        con::debug_line_thickness,
+        WHITE
       );
     }
     for(const auto& elevator : gd.elevators){
-      al_draw_line(
-        elevator.left_px,
-        elevator.surface_px,
-        elevator.right_px,
-        elevator.surface_px,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawLineEx(
+        {static_cast<float>(elevator.left_px), static_cast<float>(elevator.surface_px)},
+        {static_cast<float>(elevator.right_px), static_cast<float>(elevator.surface_px)},
+        con::debug_line_thickness,
+        WHITE
       );
     }
     for(const auto& conveyor : gd.conveyors){
-      al_draw_line(
-        conveyor.left_px,
-        conveyor.surface_px,
-        conveyor.right_px,
-        conveyor.surface_px,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawLineEx(
+        {static_cast<float>(conveyor.left_px), static_cast<float>(conveyor.surface_px)},
+        {static_cast<float>(conveyor.right_px), static_cast<float>(conveyor.surface_px)},
+        con::debug_line_thickness,
+        WHITE
       );
     }
     for(const auto& rivet : gd.rivets){
-      al_draw_rectangle(
-        rivet.hit_body_box.left,
-        rivet.hit_body_box.bottom,
-        rivet.hit_body_box.right,
-        rivet.hit_body_box.top,
-        al_map_rgb(255, 120, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {rivet.hit_body_box.left, rivet.hit_body_box.bottom,
+         rivet.hit_body_box.right - rivet.hit_body_box.left,
+         rivet.hit_body_box.top - rivet.hit_body_box.bottom},
+        con::debug_line_thickness,
+        {255, 120, 0, 255}
       );
-      al_draw_rectangle(
-        rivet.hit_jump_box.left,
-        rivet.hit_jump_box.bottom,
-        rivet.hit_jump_box.right,
-        rivet.hit_jump_box.top,
-        al_map_rgb(255, 120, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {rivet.hit_jump_box.left, rivet.hit_jump_box.bottom,
+         rivet.hit_jump_box.right - rivet.hit_jump_box.left,
+         rivet.hit_jump_box.top - rivet.hit_jump_box.bottom},
+        con::debug_line_thickness,
+        {255, 120, 0, 255}
       );
     }
     for(const auto& spring : gd.springs){
-      al_draw_rectangle(
-        spring.body_box.left,
-        spring.body_box.bottom,
-        spring.body_box.right,
-        spring.body_box.top,
-        al_map_rgb(0, 255, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {spring.body_box.left, spring.body_box.bottom,
+         spring.body_box.right - spring.body_box.left,
+         spring.body_box.top - spring.body_box.bottom},
+        con::debug_line_thickness,
+        GREEN
       );
     }
     for(const auto& tub : gd.tubs){
-      al_draw_rectangle(
-        tub.body_box.left,
-        tub.body_box.bottom,
-        tub.body_box.right,
-        tub.body_box.top,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {tub.body_box.left, tub.body_box.bottom,
+         tub.body_box.right - tub.body_box.left,
+         tub.body_box.top - tub.body_box.bottom},
+        con::debug_line_thickness,
+        WHITE
       );
     }
     for(const auto& ladder : gd.ladders){
-      al_draw_line(
-        ladder.spine_px,
-        ladder.bottom_px,
-        ladder.spine_px,
-        ladder.top_px,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawLineEx(
+        {static_cast<float>(ladder.spine_px), ladder.bottom_px},
+        {static_cast<float>(ladder.spine_px), static_cast<float>(ladder.top_px)},
+        con::debug_line_thickness,
+        WHITE
       );
     }
     for(const auto& ladder : gd.moving_ladders){
-      al_draw_line(
-        ladder.spine_px,
-        ladder.bottom_px,
-        ladder.spine_px,
-        ladder.top_px,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawLineEx(
+        {static_cast<float>(ladder.spine_px), ladder.bottom_px},
+        {static_cast<float>(ladder.spine_px), static_cast<float>(ladder.top_px)},
+        con::debug_line_thickness,
+        WHITE
       );
     }
-    al_draw_rectangle(
-      gd.oil_can_.body_box.left,
-      gd.oil_can_.body_box.top,
-      gd.oil_can_.body_box.right,
-      gd.oil_can_.body_box.bottom,
-      al_map_rgb(255, 255, 255),
-      con::debug_line_thickness
+    DrawRectangleLinesEx(
+      {gd.oil_can_.body_box.left, gd.oil_can_.body_box.bottom,
+       gd.oil_can_.body_box.right - gd.oil_can_.body_box.left,
+       gd.oil_can_.body_box.top - gd.oil_can_.body_box.bottom},
+      con::debug_line_thickness,
+      WHITE
     );
     for(const auto& pickup : gd.pickups){
-      al_draw_rectangle(
-        pickup.collect_box.left,
-        pickup.collect_box.top,
-        pickup.collect_box.right,
-        pickup.collect_box.bottom,
-        al_map_rgb(0, 0, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {pickup.collect_box.left, pickup.collect_box.bottom,
+         pickup.collect_box.right - pickup.collect_box.left,
+         pickup.collect_box.top - pickup.collect_box.bottom},
+        con::debug_line_thickness,
+        BLUE
       );
     }
     if(gd.kong_.flags & FLAG_KONG_ALIVE){
-      al_draw_rectangle(
-        gd.kong_.body_box.left,
-        gd.kong_.body_box.top,
-        gd.kong_.body_box.right,
-        gd.kong_.body_box.bottom,
-        al_map_rgb(255, 85, 180),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {gd.kong_.body_box.left, gd.kong_.body_box.bottom,
+         gd.kong_.body_box.right - gd.kong_.body_box.left,
+         gd.kong_.body_box.top - gd.kong_.body_box.bottom},
+        con::debug_line_thickness,
+        {255, 85, 180, 255}
       );
     }
     if(gd.barrel_kong.flags & FLAG_BARREL_KONG_ALIVE){
-      al_draw_rectangle(
-        gd.barrel_kong.body_box.left,
-        gd.barrel_kong.body_box.top,
-        gd.barrel_kong.body_box.right,
-        gd.barrel_kong.body_box.bottom,
-        al_map_rgb(255, 85, 180),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {gd.barrel_kong.body_box.left, gd.barrel_kong.body_box.bottom,
+         gd.barrel_kong.body_box.right - gd.barrel_kong.body_box.left,
+         gd.barrel_kong.body_box.top - gd.barrel_kong.body_box.bottom},
+        con::debug_line_thickness,
+        {255, 85, 180, 255}
       );
     }
     auto& jm = gd.jump_man;
-    al_draw_rectangle(
-      jm.body_box.left,
-      jm.body_box.top,
-      jm.body_box.right,
-      jm.body_box.bottom,
-      al_map_rgb(255, 85, 180),
-      con::debug_line_thickness
+    DrawRectangleLinesEx(
+      {jm.body_box.left, jm.body_box.bottom,
+       jm.body_box.right - jm.body_box.left,
+       jm.body_box.top - jm.body_box.bottom},
+      con::debug_line_thickness,
+      {255, 85, 180, 255}
     );
-    al_draw_rectangle(
-      jm.feet_box.left,
-      jm.feet_box.top,
-      jm.feet_box.right,
-      jm.feet_box.bottom,
-      al_map_rgb(255, 255, 255),
-      con::debug_line_thickness
+    DrawRectangleLinesEx(
+      {jm.feet_box.left, jm.feet_box.bottom,
+       jm.feet_box.right - jm.feet_box.left,
+       jm.feet_box.top - jm.feet_box.bottom},
+      con::debug_line_thickness,
+      WHITE
     );
-    al_draw_rectangle(
-      jm.leap_box.left,
-      jm.leap_box.top,
-      jm.leap_box.right,
-      jm.leap_box.bottom,
-      al_map_rgb(0, 255, 0),
-      con::debug_line_thickness
+    DrawRectangleLinesEx(
+      {jm.leap_box.left, jm.leap_box.bottom,
+       jm.leap_box.right - jm.leap_box.left,
+       jm.leap_box.top - jm.leap_box.bottom},
+      con::debug_line_thickness,
+      GREEN
     );
     if(jm.flags & FLAG_JM_HAMMERING){
-      al_draw_rectangle(
-        jm.hammer_box.left,
-        jm.hammer_box.top,
-        jm.hammer_box.right,
-        jm.hammer_box.bottom,
-        al_map_rgb(0, 255, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {jm.hammer_box.left, jm.hammer_box.bottom,
+         jm.hammer_box.right - jm.hammer_box.left,
+         jm.hammer_box.top - jm.hammer_box.bottom},
+        con::debug_line_thickness,
+        GREEN
       );
     }
     for(const auto& barrel : gd.barrels){
-      al_draw_rectangle(
-        barrel.body_box.left,
-        barrel.body_box.top,
-        barrel.body_box.right,
-        barrel.body_box.bottom,
-        al_map_rgb(0, 0, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {barrel.body_box.left, barrel.body_box.bottom,
+         barrel.body_box.right - barrel.body_box.left,
+         barrel.body_box.top - barrel.body_box.bottom},
+        con::debug_line_thickness,
+        BLUE
       );
-      al_draw_rectangle(
-        barrel.ladder_box.left,
-        barrel.ladder_box.top,
-        barrel.ladder_box.right,
-        barrel.ladder_box.bottom,
-        al_map_rgb(0, 255, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {barrel.ladder_box.left, barrel.ladder_box.bottom,
+         barrel.ladder_box.right - barrel.ladder_box.left,
+         barrel.ladder_box.top - barrel.ladder_box.bottom},
+        con::debug_line_thickness,
+        CYAN
       );
     }
-    al_draw_line(
-      con::wild_left_margin_x,
-      0,
-      con::wild_left_margin_x,
-      con::world_height_px,
-      al_map_rgb(40, 40, 40),
-      con::debug_line_thickness
+    DrawLineEx(
+      {con::wild_left_margin_x, 0},
+      {con::wild_left_margin_x, static_cast<float>(con::world_height_px)},
+      con::debug_line_thickness,
+      {40, 40, 40, 255}
     );
-    al_draw_line(
-      con::wild_right_margin_x,
-      0,
-      con::wild_right_margin_x,
-      con::world_height_px,
-      al_map_rgb(40, 40, 40),
-      con::debug_line_thickness
+    DrawLineEx(
+      {con::wild_right_margin_x, 0},
+      {con::wild_right_margin_x, static_cast<float>(con::world_height_px)},
+      con::debug_line_thickness,
+      {40, 40, 40, 255}
     );
     constexpr auto dir_len = 20.f;
     for(const auto& wild : gd.wilds){
-      al_draw_rectangle(
-        wild.body_box.left,
-        wild.body_box.top,
-        wild.body_box.right,
-        wild.body_box.bottom,
-        al_map_rgb(255, 0, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {wild.body_box.left, wild.body_box.bottom,
+         wild.body_box.right - wild.body_box.left,
+         wild.body_box.top - wild.body_box.bottom},
+        con::debug_line_thickness,
+        MAGENTA
       );
       auto x0 = wild.position_px.x + con::barrel_wild_half_width_px;
       auto y0 = wild.position_px.y + con::barrel_wild_height_px;
       if(wild.wild_type_ == WILD_CALM){
         for(const auto dir : con::narrow_rebound_dirs){
-          al_draw_line(
-            x0,
-            y0,
-            x0 + (dir.x * dir_len),
-            y0 + (dir.y * dir_len),
-            al_map_rgb(100, 100, 100),
-            con::debug_line_thickness
+          DrawLineEx(
+            {x0, y0},
+            {x0 + (dir.x * dir_len), y0 + (dir.y * dir_len)},
+            con::debug_line_thickness,
+            {100, 100, 100, 255}
           );
         }
       }
       else{
         for(const auto dir : con::wide_rebound_dirs){
-          al_draw_line(
-            x0,
-            y0,
-            x0 + (dir.x * dir_len),
-            y0 + (dir.y * dir_len),
-            al_map_rgb(100, 100, 100),
-            con::debug_line_thickness
+          DrawLineEx(
+            {x0, y0},
+            {x0 + (dir.x * dir_len), y0 + (dir.y * dir_len)},
+            con::debug_line_thickness,
+            {100, 100, 100, 255}
           );
         }
       }
-      al_draw_line(
-        x0,
-        y0,
-        x0 + (wild.speed_dir.x * dir_len),
-        y0 + (wild.speed_dir.y * dir_len),
-        al_map_rgb(255, 255, 0),
-        con::debug_line_thickness
+      DrawLineEx(
+        {x0, y0},
+        {x0 + (wild.speed_dir.x * dir_len), y0 + (wild.speed_dir.y * dir_len)},
+        con::debug_line_thickness,
+        YELLOW
       );
     }
     for(const auto& mob : gd.mobs){
-      al_draw_rectangle(
-        mob.body_box.left,
-        mob.body_box.top,
-        mob.body_box.right,
-        mob.body_box.bottom,
-        al_map_rgb(255, 255, 255),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {mob.body_box.left, mob.body_box.bottom,
+         mob.body_box.right - mob.body_box.left,
+         mob.body_box.top - mob.body_box.bottom},
+        con::debug_line_thickness,
+        WHITE
       );
-      al_draw_rectangle(
-        mob.ladder_box.left,
-        mob.ladder_box.top,
-        mob.ladder_box.right,
-        mob.ladder_box.bottom,
-        al_map_rgb(255, 255, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {mob.ladder_box.left, mob.ladder_box.bottom,
+         mob.ladder_box.right - mob.ladder_box.left,
+         mob.ladder_box.top - mob.ladder_box.bottom},
+        con::debug_line_thickness,
+        YELLOW
       );
-      al_draw_rectangle(
-        mob.left_feeler.left,
-        mob.left_feeler.top,
-        mob.left_feeler.right,
-        mob.left_feeler.bottom,
-        al_map_rgb(0, 255, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {mob.left_feeler.left, mob.left_feeler.bottom,
+         mob.left_feeler.right - mob.left_feeler.left,
+         mob.left_feeler.top - mob.left_feeler.bottom},
+        con::debug_line_thickness,
+        GREEN
       );
-      al_draw_rectangle(
-        mob.right_feeler.left,
-        mob.right_feeler.top,
-        mob.right_feeler.right,
-        mob.right_feeler.bottom,
-        al_map_rgb(0, 255, 0),
-        con::debug_line_thickness
+      DrawRectangleLinesEx(
+        {mob.right_feeler.left, mob.right_feeler.bottom,
+         mob.right_feeler.right - mob.right_feeler.left,
+         mob.right_feeler.top - mob.right_feeler.bottom},
+        con::debug_line_thickness,
+        GREEN
       );
     }
   }

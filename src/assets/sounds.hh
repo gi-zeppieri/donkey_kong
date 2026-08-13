@@ -3,6 +3,10 @@
 
 #include <optional>
 
+// Forward declare to avoid including raylib.h in header
+struct Sound;
+struct Music;
+
 enum sound_id
 {
   SND_MUSIC_1,
@@ -32,6 +36,9 @@ bool load_sounds();
 
 /** Must call at end to free sound memory. */
 void unload_sounds();
+
+/** Update looping sounds - call this each frame. */
+void update_sounds();
 
 using snd_play_id = std::optional<int>;
 

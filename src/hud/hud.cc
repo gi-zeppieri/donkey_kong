@@ -1,4 +1,4 @@
-#include <allegro5/allegro_primitives.h>
+#include "raylib.h"
 #include <sstream>
 #include <iomanip>
 #include "hud.hh"

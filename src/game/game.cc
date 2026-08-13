@@ -1,4 +1,6 @@
-#include <allegro5/allegro_primitives.h>
+#include "raylib.h"
+#include <cassert>
+#include <algorithm>
 #include "types.hh"
 #include "game.hh"
 #include "constants.hh"
@@ -156,7 +158,7 @@ namespace
 
   void draw_game_over_sign()
   {
-    al_draw_filled_rectangle(56, 160, 167, 200, al_map_rgb(0, 0, 0));
+    DrawRectangle(56, 160, 167 - 56, 200 - 160, BLACK);
     draw_text(72, 176, "GAME", TEXT_CYAN);
     draw_text(120, 176, "OVER", TEXT_CYAN);
   }

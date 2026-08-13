@@ -22,16 +22,7 @@ set(SOURCE_FILES
         src/game/stages/classic_rivets.cc
         src/assets/cutscenes.cc src/assets/fonts.cc src/assets/fonts.hh src/hud/hud.hh src/hud/hud.cc src/assets/sounds.hh src/assets/sounds.cc src/hiscores/hiscores.cc src/hiscores/hiscores.hh src/menu/menu.cc src/menu/menu.hh src/title/title.cc src/title/title.hh)
 
-set(ALLEGRO_LIBRARIES
-        -lallegro
-        -lallegro_main
-        -lallegro_font
-        -lallegro_ttf
-        -lallegro_audio
-        -lallegro_primitives
-        -lallegro_image
-        -lallegro_audio
-        -lallegro_acodec)
+find_package(raylib 5.0 REQUIRED)
 
 add_executable(donkey_kong_1981 ${SOURCE_FILES})
-TARGET_LINK_LIBRARIES(donkey_kong_1981 ${ALLEGRO_LIBRARIES})
+target_link_libraries(donkey_kong_1981 raylib)

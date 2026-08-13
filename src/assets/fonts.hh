@@ -3,6 +3,10 @@
 
 #include <string>
 
+// Forward declare Raylib types to avoid including raylib.h in header
+struct Font;
+struct Color;
+
 bool load_fonts();
 void unload_fonts();
 

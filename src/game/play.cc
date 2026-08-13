@@ -1,3 +1,5 @@
+#include <cassert>
+#include <algorithm>
 #include "raylib.h"
 #include <tuple>
 #include <sstream>

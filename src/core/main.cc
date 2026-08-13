@@ -6,6 +6,7 @@
 #include <ctime>
 #include <random>
 #include <memory>
+#include <cassert>
 #include "log.hh"
 #include "input.hh"
 #include "../assets/sprites.hh"
@@ -120,7 +121,6 @@ int main()
         log(log_lvl::warning, ss.str());
       };
 
-      const char* value;
       const char* value = nullptr;
       value = nullptr; // Placeholder - would read from config
       if(value != nullptr){

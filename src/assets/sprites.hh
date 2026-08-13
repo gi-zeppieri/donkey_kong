@@ -2,10 +2,8 @@
 #define DONKEY_KONG_1981_SPRITES_HH
 
 #include <array>
+#include "raylib.h"
 #include "../core/math.hh"
-
-// Forward declare Raylib types to avoid including raylib.h in header
-struct Texture2D;
 
 enum sprite_sheet_id
 {

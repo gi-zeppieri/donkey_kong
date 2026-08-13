@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cassert>
 #include "../world.hh"
 #include "../constants.hh"
 #include "../../core/rand.hh"

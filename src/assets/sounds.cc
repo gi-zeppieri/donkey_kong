@@ -80,7 +80,7 @@ bool load_sounds()
     audio_samples[snd] = LoadSound(filepath.c_str());
     audio_music[snd] = LoadMusicStream(filepath.c_str());
     
-    if(!IsSoundReady(audio_samples[snd]) || !IsMusicReady(audio_music[snd])){
+    if(!(audio_samples[snd].frameCount > 0) || !(audio_music[snd].frameCount > 0)){
       log_load_fail(snd_filenames[snd]);
       return false;
     }

@@ -19,7 +19,7 @@ bool load_fonts()
 
   constexpr const char* font_path = "assets/fonts/PressStart2P-Regular.ttf";
   game_font = LoadFontEx(font_path, 8, nullptr, 0);
-  if(!IsFontReady(game_font)){
+  if(!game_font.texture.id > 0){
     std::string msg{"failed to load game font '"};
     msg += font_path;
     msg += "'";
@@ -31,7 +31,7 @@ bool load_fonts()
 
 void unload_fonts()
 {
-  if(IsFontReady(game_font)){
+  if(game_font.texture.id > 0){
     UnloadFont(game_font);
   }
 }

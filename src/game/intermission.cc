@@ -1,6 +1,7 @@
 #include <array>
 #include "types.hh"
 #include "constants.hh"
+#include <cassert>
 #include "../assets/sounds.hh"
 #include "../assets/sprites.hh"
 #include "../assets/fonts.hh"

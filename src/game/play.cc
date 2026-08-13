@@ -1789,7 +1789,7 @@ namespace {
          barrel.ladder_box.right - barrel.ladder_box.left,
          barrel.ladder_box.top - barrel.ladder_box.bottom},
         con::debug_line_thickness,
-        CYAN
+        SKYBLUE
       );
     }
     DrawLineEx(

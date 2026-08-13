@@ -1,8 +1,10 @@
+#include <algorithm>
 #include "world.hh"
 #include "constants.hh"
 #include "../assets/animations.hh"
 #include "../assets/sounds.hh"
 #include "../core/rand.hh"
+#include <cassert>
 
 void update_jump_man_feet_box(jump_man_data& jm);
 void update_jump_man_body_box(jump_man_data& jm);

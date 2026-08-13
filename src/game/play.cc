@@ -1,6 +1,6 @@
+#include "raylib.h"
 #include <cassert>
 #include <algorithm>
-#include "raylib.h"
 #include <tuple>
 #include <sstream>
 #include <iomanip>
@@ -231,6 +231,7 @@ vector2f select_wild_rebound_dir(const wild_data& wd, const jump_man_data& jm)
     }
     default:
       assert(0);
+      return vector2f{0.0f, 0.0f};
   }
 }
 
@@ -1419,6 +1420,7 @@ namespace {
         case 3: return {800, score_value::score_800};
         default: assert(0);
       }
+      return {300, score_value::score_300};
     };
 
     if(jm.flags & FLAG_JM_HAMMERING){

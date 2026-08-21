@@ -1,92 +1,47 @@
-## Donkey Kong (1981) :joystick:
+# Donkey Kong 1981 (C++ / Raylib Fork)
 
-Feature complete remake of the 1981 arcade classic Donkey Kong built for modern x86-64 desktop machines, both
-Windows and Linux. Implemented in C++ using Allegro5. 
+This project is a modern fork of an existing *Donkey Kong* open-source port. The primary goal of this repository is to modernize the graphics backend, achieve pixel-perfect arcade aesthetics, and fix underlying visual and logical bugs.
 
-I tried to keep this project authentic to the original and so the mechanics were programmed using reference to 
-various sites which break down how the original source worked along with my own observations from videos on 
-Youtube. Hence, some of the mechanics are accurate (like the rolling barrels) and some are similar but not
-accurate (like the wild barrels). The gameplay 'feel' is also similar but not perfectly accurate, so mario likely runs
-and jumps at a slightly different rate etc. I have also made changes (hopefully improvements) to make the
-controls less clunky.
+## Graphics Library Update
+The original codebase's rendering system was overhauled and ported to use the Raylib framework. This modernization effort involved:
+* Migrating the asset loader to utilize Raylib's `LoadTexture()` and `Texture2D` structures.
+* Replacing legacy drawing methods with Raylib's `DrawTexturePro()` to allow for dynamic horizontal flipping and precise scaling.
+* Rewriting the `sprites.cc` coordinate maps to pull perfectly cropped frames from a consolidated arcade sprite sheet, ensuring 100% accurate pixel placement.
 
-Features include:
+## How to Compile and Run
+Ensure you have CMake, a modern C++ compiler, and Raylib installed on your system. 
 
-- All 4 original stages (barrel, factory, elevators, rivets).
-- Menu and title screens.
-- High score tracking (via a local file).
-- Barrels, including wild barrels.
-- Firefox and fireballs.
-- Bonus clock.
-- Pauline's lost items.
-- Hammer power-up.
-- All cutscenes. 
-- Lives system.
-- and more.
+1. **Build the game:** Run the following commands from the root directory of the project:
+`mkdir build`
+`cd build`
+`cmake ..`
+`cmake --build .`
 
-I also included some of the quirks of the original such as being able to get score by jumping next to but not 
-over mobs (including Kong).
+2. **Run the executable:** Ensure you launch the game from a directory where it can properly locate the `assets/` folder:
+`./donkey_kong_1981`
 
-The game dynamically resizes with window size, with the entire game being drawn to a 224x256px back buffer
-and then scaled up to the largest size that will fit (centered) in the window. This allows the game to be played
-fullscreen on any size monitor.
+---
 
-**Click this [Youtube link](https://www.youtube.com/watch?v=Hm3gQ7G5vNY&t) for a video playthrough of the game.**
+## Summary of Encountered Issues & Fixes
 
-There are also some other play throughs on my channel too, all just as nooby :smiley:, and yes I am aware there are a
-few bugs left in the code, notably with the high score table. I will probably fix them at some point.
+### I. Collision & Physics Issues
 
-**Disclaimer: The assets have been stripped from this repo so as to not transgress Nintendo's 
-copyright. This project was made purely for my own entertainment and is not for 
-commercial use.**
+**Ladder Hitboxes**
+* **Issue:** The simplified physics of the cloned engine required adjusting Mario's alignment to successfully mount and dismount ladders without getting snagged on platform geometry.
+* **Fix:** Realigned the player state coordinates to allow smooth transitions between the vertical ladder grid and horizontal platform planes.
 
-<p align="center">
-  <img src="doc/menus.jpg" alt="menus screenshot"/>
-</p>
-<p align="center">
-  <img src="doc/barrels_factory.jpg" alt="barrels & factory stage screenshot"/>
-</p>
-<p align="center">
-  <img src="doc/elevators_rivets.jpg" alt="elevators & rivets stage screenshot"/>
-</p>
+### II. Rendering & Visual Artifacts
 
-## Configuration
+**Background Color Keying**
+* **Issue:** Early asset extraction methods failed to properly strip the background colors, resulting in solid cyan and dark blue boxes trapping the characters. 
+* **Fix:** Implemented precise RGB alpha-masking loops to convert those specific arcade background shades to transparent pixels.
 
-The game includes a configuration file which can be used to:
+**Sprite Grid Misalignment**
+* **Issue:** Arbitrary hardcoded pixel coordinates in the original source caused Donkey Kong's body to be sliced in half and left Pauline completely invisible.
+* **Fix:** Mapped the exact X and Y pixel bounding boxes directly from the native arcade sprite sheet to ensure pixel-perfect rendering in the C++ engine.
 
-- control the window size.
-- enabled/disable fullscreen/windowed modes.
-- switch between different (hardcoded) control schemes.
-- enable/disable 'classic mode' which controls level ordering (pointless currently as only original 4 levels included).
-- enable/disable debug mode which allows skipping levels and debug drawing.
-- enable/disable invulnerable mode which makes jump man immune to damage (useful for testing/debugging).
+### III. Game State & Logic Flaws
 
-## Compilation
-
-### Linux
-
-The project has dependencies only on Allegro5, thus install those via your package manager, which
-on arch linux this is done via pacman:
-
-```shell
-pacman -s allegro
-```
-
-then cd into the project directory and run cmake,
-
-```shell
-cmake .
-make
-```
-
-### Windows
-
-Windows requires an environment be setup for the compilation, I used mingw64 via MSYS2. Once you have the
-environment setup you will need to install allegro into it, see the [allegro quickstart guide](https://github.com/liballeg/allegro_wiki/wiki/Quickstart)
-for instructions on that. Then just run cmake in the MSYS2 terminal (or within your installed environment however you
-do that):
-
-```shell
-cmake .
-make
-```
+**Inverted Controls**
+* **Issue:** Mario walked left when the right key was pressed because the game engine automatically flips sprites based on directional input, and feeding it pre-flipped image assets caused a double-inversion.
+* **Fix:** Ensured the base frames in the exported `jump_man.png` faced their default native direction so the engine's internal `flip_x` logic functioned normally.

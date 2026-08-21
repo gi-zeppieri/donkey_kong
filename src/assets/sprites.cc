@@ -119,7 +119,7 @@ namespace
     // luigi move run 0 - yellow hammer up
     sprite{SSID_JUMP_MAN, {420, 26, 13, 26}, {0.f, 5.f}},
     // luigi move run 0 - yellow hammer down
-    sprite{SSID_JUMP_MAN, {435, 36, 32, 16}, {8.f, 0.f}},
+    sprite{SSID_JUMP_MAN, {435, 26, 32, 16}, {8.f, 0.f}},
     // luigi move run 1 - yellow hammer up
     sprite{SSID_JUMP_MAN, {468, 26, 15, 26}, {0.f, 5.f}},
     // luigi move run 1 - yellow hammer down
@@ -464,4 +464,3 @@ void draw_centered_sprite(sprite_id sid, vector2f position_px, bool flip_x, bool
   
   DrawTexturePro(*texture, source, dest, origin, 0.0f, WHITE);
 }
-

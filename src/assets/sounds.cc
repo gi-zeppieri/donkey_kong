@@ -54,8 +54,10 @@ namespace
   const std::string snd_path {"assets/sounds/"};
 }
 
-bool load_sounds()
-{
+bool load_sounds() {
+  if (!IsAudioDeviceReady()) {
+    return true; // Bypass sound loading if running on a system without audio (e.g. WSL)
+  }
   log(log_lvl::info, "loading sounds");
   
   InitAudioDevice();
